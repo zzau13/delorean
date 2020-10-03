@@ -27,13 +27,6 @@ script:
     if [[ "$TRAVIS_RUST_VERSION" != "nightly" ]]; then
       cargo fmt -- --check
       cargo clippy --all-targets --all-features -- -D warnings
-      cd delorean && wasm-pack test --node && cd ..
     fi
   - cargo test --all-features --all -- --nocapture
-  - |
-    cd yarte && cargo test -- --nocapture \
-    && cargo test --features bytes-buf    \
-    && cargo test --features fixed        \
-    && cargo test --features json         \
-    && cargo test --features wasm         \
-    && cd ..
+  - wasm-pack test --node
