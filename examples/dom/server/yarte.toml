@@ -1,0 +1,5 @@
+[main]
+dir = "../templates"
+
+[debug]
+short = false
