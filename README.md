@@ -9,6 +9,9 @@ In order to  fully understand DeLorean's capabilities take a look at the followi
 - [Crate documentation](https://docs.rs/delorean/)
 - Minimum supported Rust version: 1.45 or later
 
+### Features outside the scope
+ - All blocking behaviors, specially in the main thread.
+ 
 ## Contributing
 
 Please, contribute to DeLorean! The more the better! Feel free to open an issue and/or contacting directly with the 
