@@ -1,5 +1,3 @@
-#![cfg(not(target_arch = "wasm32"))]
-
 use std::default::Default;
 use std::future::Future;
 use std::pin::Pin;
@@ -14,11 +12,12 @@ use futures::{Stream, StreamExt};
 use tokio::spawn;
 use tokio::task::JoinHandle;
 
+use crossterm::event::{Event, EventStream};
+
 use delorean::{App, Return, A};
 
-/// Reusable Commands
 #[derive(Default)]
-struct Test {
+struct Console {
     commands: Option<mpsc::UnboundedSender<Msg>>,
 }
 
@@ -29,13 +28,13 @@ enum Msg {
 }
 
 struct Commander {
-    addr: A<Test>,
+    addr: A<Console>,
     threads: Vec<(JoinHandle<()>, oneshot::Receiver<Msg>)>,
     interface: mpsc::UnboundedReceiver<Msg>,
 }
 
 impl Commander {
-    fn new(addr: A<Test>, interface: mpsc::UnboundedReceiver<Msg>) -> Commander {
+    fn new(addr: A<Console>, interface: mpsc::UnboundedReceiver<Msg>) -> Commander {
         Commander {
             addr,
             interface,
@@ -96,6 +95,10 @@ impl Stream for Commander {
     }
 }
 
+// TODO:
+fn resolve_events(_event: crossterm::Result<Event>, _addr: A<Console>) {}
+
+// TODO:
 async fn worker(msg: Msg, tx: oneshot::Sender<Msg>) {
     let msg = match msg {
         Msg::Any(n) => Msg::Any(n * 2),
@@ -104,8 +107,31 @@ async fn worker(msg: Msg, tx: oneshot::Sender<Msg>) {
     let _ = tx.send(msg);
 }
 
-// TODO: more coverage
-impl App for Test {
+struct Joiner<A, B>(A, B);
+
+impl<A, B> Future for Joiner<A, B>
+where
+    A: Future<Output = Option<()>> + Unpin,
+    B: Future<Output = Option<()>> + Unpin,
+{
+    type Output = Option<()>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let Joiner(a, b) = self.get_mut();
+        let a = Pin::new(a).poll(cx);
+        let b = Pin::new(b).poll(cx);
+
+        let result = match (a, b) {
+            (Poll::Ready(a), Poll::Pending) => a,
+            (Poll::Pending, Poll::Ready(b)) => b,
+            (Poll::Ready(a), Poll::Ready(b)) => a.and(b),
+            (Poll::Pending, Poll::Pending) => return Poll::Pending,
+        };
+        Poll::Ready(result)
+    }
+}
+
+impl App for Console {
     type BlackBox = ();
     type Output = (usize, A<Self>);
     type Message = Msg;
@@ -115,8 +141,9 @@ impl App for Test {
         self.commands.replace(tx);
         addr.send(Msg::Init);
         let mut commander = Commander::new(addr, rx);
+        let mut event = EventStream::new().map(move |x| resolve_events(x, addr));
         Box::pin(async move {
-            while commander.next().await.is_some() {}
+            while Joiner(commander.next(), event.next()).await.is_some() {}
             (0, addr)
         })
     }
@@ -143,7 +170,10 @@ impl App for Test {
 
 #[tokio::test]
 async fn test() {
-    let (ret, addr) = unsafe { A::run(Test::default()) }.await;
+    let (ret, addr) = unsafe { A::run(Console::default()) }.await;
     assert_eq!(ret, 0);
     unsafe { addr.dealloc() }
+}
+fn main() {
+    println!("Hello, world!");
 }
