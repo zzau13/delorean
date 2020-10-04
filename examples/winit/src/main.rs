@@ -15,7 +15,7 @@ use tokio::task::JoinHandle;
 
 use parking_lot::{const_rwlock, RwLock};
 
-use delorean::{App, Return, A};
+use delorean::{run, App, Return, A};
 
 use winit::event::Event;
 use winit::event_loop::EventLoop;
@@ -237,5 +237,5 @@ impl App for Winit {
 
 #[tokio::main]
 async fn main() -> usize {
-    unsafe { A::run(Winit::default()) }.await
+    run!(Winit).await
 }
