@@ -2,6 +2,7 @@ use std::default::Default;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::Poll;
+use std::io::{stdout, Write};
 
 use futures::channel::mpsc;
 use futures::channel::oneshot;
@@ -12,7 +13,9 @@ use futures::{Stream, StreamExt};
 use tokio::spawn;
 use tokio::task::JoinHandle;
 
-use crossterm::event::{Event, EventStream};
+use crossterm::event::{Event, EventStream, EnableMouseCapture, DisableMouseCapture};
+use crossterm::terminal::{enable_raw_mode};
+use crossterm::execute;
 
 use delorean::{App, Return, A};
 
@@ -96,7 +99,9 @@ impl Stream for Commander {
 }
 
 // TODO:
-fn resolve_events(_event: crossterm::Result<Event>, _addr: A<Console>) {}
+fn resolve_events(event: crossterm::Result<Event>, _addr: A<Console>) {
+    eprintln!("Event: {:?}", event)
+}
 
 // TODO:
 async fn worker(msg: Msg, tx: oneshot::Sender<Msg>) {
@@ -139,7 +144,6 @@ impl App for Console {
     fn __hydrate(&mut self, addr: A<Self>) -> Return<Self::Output> {
         let (tx, rx) = mpsc::unbounded();
         self.commands.replace(tx);
-        addr.send(Msg::Init);
         let mut commander = Commander::new(addr, rx);
         let mut event = EventStream::new().map(move |x| resolve_events(x, addr));
         Box::pin(async move {
@@ -168,12 +172,14 @@ impl App for Console {
     }
 }
 
-#[tokio::test]
-async fn test() {
+#[tokio::main]
+async fn main() {
+     enable_raw_mode().unwrap();
+    let mut stdout = stdout();
+    execute!(stdout, EnableMouseCapture).unwrap();
     let (ret, addr) = unsafe { A::run(Console::default()) }.await;
     assert_eq!(ret, 0);
     unsafe { addr.dealloc() }
-}
-fn main() {
-    println!("Hello, world!");
+
+    execute!(stdout, DisableMouseCapture).unwrap();
 }
