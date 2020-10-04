@@ -1,8 +1,8 @@
 use std::default::Default;
 use std::future::Future;
+use std::io::{stdout, Write};
 use std::pin::Pin;
 use std::task::Poll;
-use std::io::{stdout, Write};
 
 use futures::channel::mpsc;
 use futures::channel::oneshot;
@@ -13,9 +13,11 @@ use futures::{Stream, StreamExt};
 use tokio::spawn;
 use tokio::task::JoinHandle;
 
-use crossterm::event::{Event, EventStream, EnableMouseCapture, DisableMouseCapture};
-use crossterm::terminal::{enable_raw_mode};
+use crossterm::event::{
+    DisableMouseCapture, EnableMouseCapture, Event, EventStream, KeyCode, KeyEvent, KeyModifiers,
+};
 use crossterm::execute;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 
 use delorean::{App, Return, A};
 
@@ -99,8 +101,16 @@ impl Stream for Commander {
 }
 
 // TODO:
-fn resolve_events(event: crossterm::Result<Event>, _addr: A<Console>) {
-    eprintln!("Event: {:?}", event)
+fn resolve_events(event: crossterm::Result<Event>, addr: A<Console>) {
+    eprintln!("Event: {:?}", event);
+    if let Ok(Event::Key(KeyEvent { code, modifiers })) = event {
+        match (code, modifiers) {
+            (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+                addr.send(Msg::Off);
+            }
+            _ => {}
+        }
+    }
 }
 
 // TODO:
@@ -174,7 +184,7 @@ impl App for Console {
 
 #[tokio::main]
 async fn main() {
-     enable_raw_mode().unwrap();
+    enable_raw_mode().unwrap();
     let mut stdout = stdout();
     execute!(stdout, EnableMouseCapture).unwrap();
     let (ret, addr) = unsafe { A::run(Console::default()) }.await;
@@ -182,4 +192,5 @@ async fn main() {
     unsafe { addr.dealloc() }
 
     execute!(stdout, DisableMouseCapture).unwrap();
+    disable_raw_mode().unwrap()
 }
