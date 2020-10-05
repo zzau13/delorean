@@ -18,32 +18,27 @@ use parking_lot::{const_rwlock, RwLock};
 use delorean::{run, App, Return, A};
 
 use winit::event::Event;
-use winit::event_loop::EventLoop;
+use winit::event_loop::{ControlFlow, EventLoop};
 use winit::platform::unix::EventLoopExtUnix;
-#[cfg(target_os = "windows")]
-use winit::platform::windows::EventLoopExtWindows;
 use winit::window::{Window, WindowBuilder};
 
 #[derive(Default)]
 struct Winit {
     commands: Option<mpsc::UnboundedSender<Msg>>,
+    windows: Option<Window>,
 }
 
 enum Msg {
     Init,
     Any(usize),
     Off,
-}
-
-enum MyEvent {
-    Windows(Window),
-    Event(Msg),
+    Open(Window),
 }
 
 static CLOSE_EVENT_LOOP: RwLock<bool> = const_rwlock(false);
 struct MyEventLoop {
     join: Option<JoinHandle<()>>,
-    interface: Option<mpsc::UnboundedReceiver<MyEvent>>,
+    interface: Option<mpsc::UnboundedReceiver<Msg>>,
 }
 
 impl MyEventLoop {
@@ -52,13 +47,14 @@ impl MyEventLoop {
         let join = spawn(async {
             let event_loop: EventLoop<()> = EventLoop::new_any_thread();
             let window = WindowBuilder::new().build(&event_loop).unwrap();
-            tx.unbounded_send(MyEvent::Windows(window)).unwrap();
-            event_loop.run(move |event, _, _control_flow| {
+            tx.unbounded_send(Msg::Open(window)).unwrap();
+            event_loop.run(move |event, _, control_flow| {
+                *control_flow = ControlFlow::Wait;
                 if *CLOSE_EVENT_LOOP.read() {
-                    // Exit thread with error
-                    panic!();
+                    *control_flow = ControlFlow::Exit;
                 }
                 let _ = tx;
+                eprintln!("Event {:?}", event);
                 match event {
                     Event::WindowEvent { .. } => {}
                     Event::DeviceEvent { .. } => {}
@@ -80,7 +76,7 @@ impl MyEventLoop {
 }
 
 impl Stream for MyEventLoop {
-    type Item = MyEvent;
+    type Item = Msg;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         Pin::new(self.get_mut().interface.as_mut().unwrap()).poll_next(cx)
@@ -198,21 +194,15 @@ where
 
 impl App for Winit {
     type BlackBox = ();
-    type Output = usize;
+    type Output = ();
     type Message = Msg;
 
     fn __hydrate(&mut self, addr: A<Self>) -> Return<Self::Output> {
         let (tx, rx) = mpsc::unbounded();
         self.commands.replace(tx);
         let mut commander = Commander::new(addr, rx);
-        let mut event = MyEventLoop::new().map(move |x| match x {
-            MyEvent::Windows(_) => addr.send(Msg::Off),
-            MyEvent::Event(msg) => addr.send(msg),
-        });
-        Box::pin(async move {
-            while Joiner(commander.next(), event.next()).await.is_some() {}
-            0
-        })
+        let mut event = MyEventLoop::new().map(move |msg| addr.send(msg));
+        Box::pin(async move { while Joiner(commander.next(), event.next()).await.is_some() {} })
     }
 
     fn __dispatch(&mut self, msg: Self::Message, _addr: A<Self>) {
@@ -231,11 +221,14 @@ impl App for Winit {
                 eprintln!("Off");
                 let _ = self.commands.take();
             }
+            Msg::Open(window) => {
+                self.windows.replace(window);
+            }
         }
     }
 }
 
 #[tokio::main]
-async fn main() -> usize {
+async fn main() {
     run!(Winit).await
 }
