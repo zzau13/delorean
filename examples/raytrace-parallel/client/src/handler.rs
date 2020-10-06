@@ -2,13 +2,13 @@ use std::convert::TryInto;
 use std::error;
 use std::fmt;
 
+use delorean::DeLorean;
 use futures::{FutureExt, StreamExt};
 use gloo_timers::future::IntervalStream;
 use serde_json::from_str;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::window;
-use yarte_wasm_app::DeLorean;
 
 use utils::{console_error, console_log};
 

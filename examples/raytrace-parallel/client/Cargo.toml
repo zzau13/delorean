@@ -5,6 +5,10 @@ authors = ["Juan Aguilar Santillana <mhpoin@gmail.com>"]
 edition = "2018"
 workspace = ".."
 
+[profile.release]
+lto = true
+panic = "abort"
+
 [lib]
 crate-type = ["cdylib"]
 
@@ -12,7 +16,7 @@ crate-type = ["cdylib"]
 worker-pool = { path = "../worker-pool" }
 utils = { path = "../utils" }
 
-yarte_wasm_app = "0.2.1"
+delorean = "0.2.1"
 
 raytracer = { git = "https://github.com/alexcrichton/raytracer", branch = "update-deps" }
 

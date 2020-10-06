@@ -1,11 +1,12 @@
+#![cfg(target_arch = "wasm32")]
 #![feature(extern_types, box_syntax)]
 #![allow(clippy::manual_non_exhaustive)]
 use std::fmt;
 
+use delorean::{run, App, DeLorean};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{Event, HtmlInputElement};
-use yarte_wasm_app::{run, App, DeLorean};
 
 use utils::console_log;
 
