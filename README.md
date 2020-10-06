@@ -8,6 +8,7 @@ A simple single thread reactor pattern implementation.
 In order to  fully understand DeLorean's capabilities take a look at the following documentation:
 - [Crate documentation](https://docs.rs/delorean/)
 - Minimum supported Rust version: 1.45 or later
+- `#![no_std]`
 
 ### Features outside the scope
  - All blocking behaviors, specially in the main thread.
