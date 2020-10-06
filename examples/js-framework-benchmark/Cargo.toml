@@ -1,5 +1,5 @@
 [package]
-name = "js-framework-benchmark-yarte"
+name = "js-framework-benchmark-delorean"
 authors = ["Juan Aguilar Santillana <mhpoin@gmail.com>"]
 version = "0.0.1"
 publish = false
