@@ -8,7 +8,7 @@ edition = "2021"
 include = ["src/**/*", "Cargo.toml"]
 keywords = ["reactor", "WASM", "SPA"]
 license = "MIT/Apache-2.0"
-repository = "https://github.com/delorean-rs/delorean"
+repository = "https://github.com/botika/delorean"
 
 [badges]
 travis-ci = { repository = "delorean-rs/delorean", branch = "master" }
