@@ -1,12 +1,12 @@
 [package]
 name = "delorean"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Juan Aguilar Santillana <mhpoin@gmail.com>"]
 description = "A simple single thread reactor pattern for wasm"
 documentation = "https://docs.rs/delorean"
-edition = "2018"
+edition = "2021"
 include = ["src/**/*", "Cargo.toml"]
-keywords = ["reactor"]
+keywords = ["reactor", "WASM", "SPA"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/delorean-rs/delorean"
 
@@ -18,8 +18,6 @@ maintenance = { status = "actively-developed" }
 wasm-bindgen-futures = "0.4"
 async-timer = "0.7"
 wasm-bindgen-test = "0.3"
-futures = "0.3"
-tokio = { version = "0.2", features = ["rt-core", "rt-threaded", "macros", "time"]}
 
 [build-dependencies]
-yarte_helpers = { version = "0.12.2", default-features = false }
+yarte_helpers = { version = "~0.15.8", default-features = false, features = ["config"] }

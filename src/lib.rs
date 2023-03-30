@@ -40,8 +40,7 @@ mod queue;
 mod inner;
 
 #[cfg(not(target_arch = "wasm32"))]
-#[path = "native.rs"]
-mod inner;
+compile_error!("only compile in wasm32");
 
 pub use inner::*;
 

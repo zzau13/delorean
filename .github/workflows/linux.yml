@@ -17,9 +17,8 @@ jobs:
 
     name: ${{ matrix.version }} - x86_64-unknown-linux-gnu
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -29,44 +28,41 @@ jobs:
           components: rustfmt
           override: true
 
-      - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          command: generate-lockfile
+          profile: minimal
+          toolchain: ${{ matrix.version }}
+          override: true
+          components: rustfmt, clippy
 
-      - name: Cache cargo registry
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry
-          key: ${{ matrix.version }}-x86_64-unknown-linux-gnu-cargo-registry-trimmed-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install wasm32 target
+        run: rustup target add wasm32-unknown-unknown
 
-      - name: Cache cargo index
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/git
-          key: ${{ matrix.version }}-x86_64-unknown-linux-gnu-cargo-index-trimmed-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        timeout-minutes: 40
-        with:
-          command: test
-          args: --all --all-features --no-fail-fast -- --nocapture
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install wasm-pack
-        run: |
-          cargo install wasm-pack --force
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --all --all-features
+
+      - name: Fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --check --verbose
+
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all --all-features
 
       - name: Run test wasm
         timeout-minutes: 40
         run: |
           wasm-pack test --node
-
-      - name: Install cargo-cache
-        continue-on-error: true
-        run: |
-          cargo install cargo-cache --no-default-features --features ci-autoclean
-
-      - name: Clear the cargo caches
-        run: |
-          cargo-cache

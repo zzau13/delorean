@@ -1,13 +1,13 @@
 # DeLorean [![Latest version](https://img.shields.io/crates/v/delorean.svg)](https://crates.io/crates/delorean) [![Build Status](https://travis-ci.org/delorean-rs/delorean.svg?branch=master)](https://travis-ci.org/delorean-rs/delorean)
 
-DeLorean for your app. Easy and safe traveling to the future in your thread.
+WASM DeLorean for your single page app. Easy and safe traveling to the future in your thread.
 
 A simple single thread reactor pattern implementation. 
 
 ## Documentation
 In order to  fully understand DeLorean's capabilities take a look at the following documentation:
 - [Crate documentation](https://docs.rs/delorean/)
-- Minimum supported Rust version: 1.45 or later
+- Minimum supported Rust version: 1.65 or later
 - `#![no_std]`
 -  [Fastest than vanillajs](https://krausest.github.io/js-framework-benchmark/index.html)
 
