@@ -1,4 +1,4 @@
-# DeLorean [![Latest version](https://img.shields.io/crates/v/delorean.svg)](https://crates.io/crates/delorean) [![Build Status](https://travis-ci.org/delorean-rs/delorean.svg?branch=master)](https://travis-ci.org/delorean-rs/delorean)
+# DeLorean [![Latest version](https://img.shields.io/crates/v/delorean.svg)](https://crates.io/crates/delorean) 
 
 WASM DeLorean for your single page app. Easy and safe traveling to the future in your thread.
 
