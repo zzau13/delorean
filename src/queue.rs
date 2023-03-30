@@ -2,7 +2,6 @@
 //!
 // http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
 
-// TODO: test grow array implementation
 use alloc::boxed::Box;
 
 use core::{cell::UnsafeCell, ptr};

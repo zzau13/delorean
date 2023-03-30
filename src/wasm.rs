@@ -11,7 +11,6 @@ use core::marker::{Send, Sync};
 /// App communicate exclusively by directional exchanging messages.
 ///
 /// It is recommended not to implement out of WASM Single Page Application context.
-// TODO: derive
 pub trait App: Default + 'static {
     type BlackBox;
     type Message: 'static;
@@ -20,13 +19,11 @@ pub trait App: Default + 'static {
     #[inline]
     fn __render(&mut self, _addr: A<Self>) {}
 
-    // TODO: Future backpressure
     /// Private: empty for overridden in derive
     #[doc(hidden)]
     #[inline]
     fn __hydrate(&mut self, _addr: A<Self>) {}
 
-    // TODO: Future backpressure
     /// Private: empty for overridden in derive
     #[doc(hidden)]
     #[inline]
@@ -148,7 +145,6 @@ impl<I: App> A<I> {
     }
 }
 
-// TODO: NEW with Reference Counter for use outside of main thread
 /// Constructor and destructor
 impl<I: App> Addr<I> {
     /// Make new Address for App
